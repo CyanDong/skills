@@ -1,0 +1,43 @@
+{
+  "name": "create-react-admin-skill",
+  "version": "1.0.0",
+  "description": "快速创建 React + TypeScript + Ant Design 中后台项目的 Agent Skill 脚手架",
+  "main": "index.js",
+  "bin": {
+    "create-react-admin-skill": "./bin/cli.js"
+  },
+  "scripts": {
+    "test": "node bin/cli.js --help",
+    "pack": "npm pack"
+  },
+  "keywords": [
+    "react",
+    "typescript",
+    "antd",
+    "admin",
+    "dashboard",
+    "agent-skill",
+    "cli",
+    "scaffold"
+  ],
+  "author": "CyanDong (https://github.com/CyanDong)",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/CyanDong/skills.git",
+    "directory": "create-react-admin-skill"
+  },
+  "bugs": {
+    "url": "https://github.com/CyanDong/skills/issues"
+  },
+  "homepage": "https://github.com/CyanDong/skills/tree/main/create-react-admin-skill#readme",
+  "engines": {
+    "node": ">=16.0.0"
+  },
+  "files": [
+    "bin",
+    "scripts",
+    "SKILL.md",
+    "README.md"
+  ]
+}
