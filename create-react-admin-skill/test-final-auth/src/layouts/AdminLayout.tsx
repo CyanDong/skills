@@ -4,6 +4,7 @@ import { Outlet, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 
 const { Header, Sider, Content } = Layout;
+const APP_NAME = '完整测试系统';
 
 const menuItems = [
   { key: '/dashboard', icon: <DashboardOutlined />, label: '仪表盘' },
@@ -26,7 +27,7 @@ function AdminLayout() {
       <Sider width={220} theme="light" style={{ borderRight: `1px solid ${token.colorBorder}` }}>
         <div style={{ padding: 16 }}>
           <Typography.Title level={4} style={{ margin: 0 }}>
-            ${appName}
+            {APP_NAME}
           </Typography.Title>
         </div>
         <Menu
@@ -48,7 +49,7 @@ function AdminLayout() {
             paddingRight: 24
           }}
         >
-          <Typography.Text>欢迎使用 ${appName}</Typography.Text>
+          <Typography.Text>欢迎使用 {APP_NAME}</Typography.Text>
           <Space>
             <Typography.Text type="secondary">${user?.username || '用户'}</Typography.Text>
             <Button type="text" danger icon={<LogoutOutlined />} onClick={handleLogout}>

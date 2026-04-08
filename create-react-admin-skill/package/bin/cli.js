@@ -95,58 +95,6 @@ function runCommand(command, cwd) {
   execSync(command, { cwd, stdio: "inherit" });
 }
 
-function getNodeVersion() {
-  const [majorStr, minorStr] = process.versions.node.split(".");
-  return {
-    major: Number(majorStr),
-    minor: Number(minorStr),
-  };
-}
-
-function getCreateViteCommands() {
-  const { major, minor } = getNodeVersion();
-  const commands = [];
-
-  if (major > 20 || (major === 20 && minor >= 19)) {
-    commands.push(
-      "npx --yes create-vite@latest . --template react-ts --no-interactive",
-    );
-  }
-
-  if (major >= 18) {
-    commands.push(
-      "npx --yes create-vite@5 . --template react-ts --no-interactive",
-    );
-  }
-
-  if (commands.length === 0) {
-    throw new Error(
-      `当前 Node.js 版本 ${process.versions.node} 过低，请升级到 >=18`,
-    );
-  }
-
-  return commands;
-}
-
-function scaffoldViteProject(targetDir) {
-  const commands = getCreateViteCommands();
-  let lastError = null;
-
-  for (const command of commands) {
-    try {
-      runCommand(command, targetDir);
-      return;
-    } catch (error) {
-      lastError = error;
-      log.warn(`create-vite 执行失败，尝试回退版本: ${command}`);
-    }
-  }
-
-  throw new Error(
-    `create-vite 初始化失败。请检查网络或 npm 源配置。原始错误: ${lastError?.message || "未知错误"}`,
-  );
-}
-
 function writeFile(filePath, content) {
   fs.mkdirSync(path.dirname(filePath), { recursive: true });
   fs.writeFileSync(filePath, content, "utf8");
@@ -755,8 +703,11 @@ async function main() {
       fs.mkdirSync(targetDir, { recursive: true });
     }
 
-    // 在目标目录内运行 create-vite，并根据 Node 版本自动回退
-    scaffoldViteProject(targetDir);
+    // 始终在目标目录内运行 create-vite，使用 '.' 作为目标
+    runCommand(
+      "npx --yes create-vite@latest . --template react-ts --no-interactive",
+      targetDir,
+    );
 
     replaceTemplateFiles(targetDir, config.appName);
 
