@@ -1,0 +1,40 @@
+{
+  "name": "create-agent-skills",
+  "version": "1.0.0",
+  "description": "快速创建 AI Agent Skills 模板的脚手架工具",
+  "main": "index.js",
+  "bin": {
+    "create-agent-skills": "./bin/cli.js"
+  },
+  "scripts": {
+    "test": "node bin/cli.js --help"
+  },
+  "keywords": [
+    "ai",
+    "agent",
+    "skills",
+    "cli",
+    "scaffold",
+    "template",
+    "copilot",
+    "claude"
+  ],
+  "author": "CyanDong",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/CyanDong/skills.git"
+  },
+  "bugs": {
+    "url": "https://github.com/CyanDong/skills/issues"
+  },
+  "homepage": "https://github.com/CyanDong/skills#readme",
+  "engines": {
+    "node": ">=14.0.0"
+  },
+  "files": [
+    "bin",
+    "templates",
+    "README.md"
+  ]
+}
