@@ -166,13 +166,16 @@ import { BrowserRouter } from 'react-router-dom';
 import { ConfigProvider } from 'antd';
 import zhCN from 'antd/locale/zh_CN';
 import App from './App';
+import { AuthProvider } from './contexts/AuthContext';
 import './index.css';
 
 ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>
     <ConfigProvider locale={zhCN}>
       <BrowserRouter>
-        <App />
+        <AuthProvider>
+          <App />
+        </AuthProvider>
       </BrowserRouter>
     </ConfigProvider>
   </React.StrictMode>
@@ -184,10 +187,17 @@ ReactDOM.createRoot(document.getElementById('root')!).render(
     path.join(projectDir, "src/App.tsx"),
     `import { App as AntdApp } from 'antd';
 import { useRoutes } from 'react-router-dom';
+import { useAuth } from './contexts/AuthContext';
 import { routes } from './router';
 
 function App() {
+  const { isLoading } = useAuth();
   const element = useRoutes(routes);
+
+  if (isLoading) {
+    return <div style={{ height: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>加载中...</div>;
+  }
+
   return <AntdApp>{element}</AntdApp>;
 }
 
@@ -197,13 +207,20 @@ export default App;
 
   writeFile(
     path.join(projectDir, "src/router/index.tsx"),
-    `import type { RouteObject } from 'react-router-dom';
+    `import type { ReactNode } from 'react';
+import type { RouteObject } from 'react-router-dom';
 import { Navigate } from 'react-router-dom';
+import { useAuth } from '../contexts/AuthContext';
 import AdminLayout from '../layouts/AdminLayout';
 import Dashboard from '../pages/Dashboard';
 import Users from '../pages/Users';
 import Login from '../pages/Login';
 import NotFound from '../pages/NotFound';
+
+function ProtectedRoute({ children }: { children: ReactNode }) {
+  const { isAuthenticated } = useAuth();
+  return isAuthenticated ? children : <Navigate to="/login" replace />;
+}
 
 export const routes: RouteObject[] = [
   {
@@ -212,7 +229,11 @@ export const routes: RouteObject[] = [
   },
   {
     path: '/',
-    element: <AdminLayout />,
+    element: (
+      <ProtectedRoute>
+        <AdminLayout />
+      </ProtectedRoute>
+    ),
     children: [
       {
         index: true,
@@ -238,9 +259,10 @@ export const routes: RouteObject[] = [
 
   writeFile(
     path.join(projectDir, "src/layouts/AdminLayout.tsx"),
-    `import { Layout, Menu, Typography, theme } from 'antd';
-import { DashboardOutlined, TeamOutlined } from '@ant-design/icons';
+    `import { Button, Layout, Menu, Space, Typography, theme } from 'antd';
+import { DashboardOutlined, TeamOutlined, LogoutOutlined } from '@ant-design/icons';
 import { Outlet, useLocation, useNavigate } from 'react-router-dom';
+import { useAuth } from '../contexts/AuthContext';
 
 const { Header, Sider, Content } = Layout;
 
@@ -253,13 +275,19 @@ function AdminLayout() {
   const { token } = theme.useToken();
   const location = useLocation();
   const navigate = useNavigate();
+  const { user, logout } = useAuth();
+
+  const handleLogout = () => {
+    logout();
+    navigate('/login');
+  };
 
   return (
     <Layout style={{ minHeight: '100vh' }}>
       <Sider width={220} theme="light" style={{ borderRight: \`1px solid \${token.colorBorder}\` }}>
         <div style={{ padding: 16 }}>
           <Typography.Title level={4} style={{ margin: 0 }}>
-            ${appName}
+            \${appName}
           </Typography.Title>
         </div>
         <Menu
@@ -276,10 +304,18 @@ function AdminLayout() {
             background: token.colorBgContainer,
             borderBottom: \`1px solid \${token.colorBorder}\`,
             display: 'flex',
-            alignItems: 'center'
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            paddingRight: 24
           }}
         >
-          <Typography.Text>欢迎使用 ${appName}</Typography.Text>
+          <Typography.Text>欢迎使用 \${appName}</Typography.Text>
+          <Space>
+            <Typography.Text type="secondary">\${user?.username || '用户'}</Typography.Text>
+            <Button type="text" danger icon={<LogoutOutlined />} onClick={handleLogout}>
+              登出
+            </Button>
+          </Space>
         </Header>
         <Content style={{ margin: 16 }}>
           <div
@@ -388,33 +424,54 @@ export default Users;
 
   writeFile(
     path.join(projectDir, "src/pages/Login.tsx"),
-    `import { Button, Card, Form, Input, Typography } from 'antd';
+    `import { Button, Card, Form, Input, Typography, message } from 'antd';
 import { useNavigate } from 'react-router-dom';
+import { useAuth } from '../contexts/AuthContext';
+
+interface LoginFormValues {
+  username: string;
+  password: string;
+}
 
 function Login() {
   const navigate = useNavigate();
+  const { login } = useAuth();
+  const [form] = Form.useForm();
 
-  const onFinish = () => {
-    navigate('/dashboard');
+  const onFinish = (values: LoginFormValues) => {
+    // 简单的本地认证演示（生产环境应调用真实的服务端认证）
+    if (values.username && values.password) {
+      login({ username: values.username });
+      message.success('登录成功！');
+      navigate('/dashboard');
+    }
   };
 
   return (
     <div className="login-page">
       <Card className="login-card">
-        <Typography.Title level={3}>登录</Typography.Title>
-        <Form layout="vertical" onFinish={onFinish}>
+        <Typography.Title level={2} style={{ marginBottom: 24, textAlign: 'center' }}>登录系统</Typography.Title>
+        <Form
+          layout="vertical"
+          onFinish={onFinish}
+          form={form}
+          initialValues={{ username: 'admin', password: '123456' }}
+        >
           <Form.Item label="用户名" name="username" rules={[{ required: true, message: '请输入用户名' }]}>
-            <Input placeholder="请输入用户名" />
+            <Input placeholder="默认: admin" />
           </Form.Item>
           <Form.Item label="密码" name="password" rules={[{ required: true, message: '请输入密码' }]}>
-            <Input.Password placeholder="请输入密码" />
+            <Input.Password placeholder="默认: 123456" />
           </Form.Item>
           <Form.Item style={{ marginBottom: 0 }}>
-            <Button type="primary" htmlType="submit" block>
+            <Button type="primary" htmlType="submit" block size="large">
               登录
             </Button>
           </Form.Item>
         </Form>
+        <Typography.Text type="secondary" style={{ marginTop: 16, display: 'block', textAlign: 'center', fontSize: 12 }}>
+          演示账号: admin / 123456
+        </Typography.Text>
       </Card>
     </div>
   );
@@ -482,6 +539,74 @@ body,
   if (fs.existsSync(appCssPath)) {
     fs.rmSync(appCssPath);
   }
+
+  writeFile(
+    path.join(projectDir, "src/contexts/AuthContext.tsx"),
+    `import type { ReactNode } from 'react';
+import { createContext, useContext, useEffect, useState } from 'react';
+
+interface User {
+  username: string;
+}
+
+interface AuthContextType {
+  isAuthenticated: boolean;
+  isLoading: boolean;
+  user: User | null;
+  login: (user: User) => void;
+  logout: () => void;
+}
+
+const AuthContext = createContext<AuthContextType | undefined>(undefined);
+
+export function AuthProvider({ children }: { children: ReactNode }) {
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
+  const [user, setUser] = useState<User | null>(null);
+
+  useEffect(() => {
+    // 初始化时检查本地存储中的认证状态
+    const storedUser = localStorage.getItem('user');
+    if (storedUser) {
+      try {
+        const parsedUser = JSON.parse(storedUser);
+        setUser(parsedUser);
+        setIsAuthenticated(true);
+      } catch {
+        localStorage.removeItem('user');
+      }
+    }
+    setIsLoading(false);
+  }, []);
+
+  const login = (newUser: User) => {
+    setUser(newUser);
+    setIsAuthenticated(true);
+    localStorage.setItem('user', JSON.stringify(newUser));
+  };
+
+  const logout = () => {
+    setUser(null);
+    setIsAuthenticated(false);
+    localStorage.removeItem('user');
+  };
+
+  return (
+    <AuthContext.Provider value={{ isAuthenticated, isLoading, user, login, logout }}>
+      {children}
+    </AuthContext.Provider>
+  );
+}
+
+export function useAuth() {
+  const context = useContext(AuthContext);
+  if (!context) {
+    throw new Error('useAuth must be used within AuthProvider');
+  }
+  return context;
+}
+`,
+  );
 }
 
 async function ask(rl, question, defaultValue = "") {
