@@ -114,11 +114,6 @@ function validatePackageManager(pm) {
   return ["npm", "pnpm", "yarn"].includes(pm);
 }
 
-function createViteCommand(projectName, isCurrentDir) {
-  const target = isCurrentDir ? "." : projectName;
-  return `npx --yes create-vite@latest ${target} --template react-ts --no-interactive`;
-}
-
 function addDepsCommand(pm) {
   if (pm === "yarn") {
     return "yarn add antd @ant-design/icons react-router-dom";
@@ -703,10 +698,15 @@ async function main() {
 
     log.info(`\n创建 React 管理后台项目 '${config.projectName}'...`);
 
-    const viteCwd = config.isCurrentDir ? targetDir : path.dirname(targetDir);
+    // 创建目标目录（如果不存在）
+    if (!fs.existsSync(targetDir)) {
+      fs.mkdirSync(targetDir, { recursive: true });
+    }
+
+    // 始终在目标目录内运行 create-vite，使用 '.' 作为目标
     runCommand(
-      createViteCommand(config.projectName, config.isCurrentDir),
-      viteCwd,
+      "npx --yes create-vite@latest . --template react-ts --no-interactive",
+      targetDir,
     );
 
     replaceTemplateFiles(targetDir, config.appName);
