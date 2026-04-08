@@ -109,13 +109,13 @@ function getCreateViteCommands() {
 
   if (major > 20 || (major === 20 && minor >= 19)) {
     commands.push(
-      "npx --yes create-vite@latest . --template react-ts --no-interactive",
+      "npm exec --yes --package=create-vite@latest -- create-vite . --template react-ts --no-interactive",
     );
   }
 
   if (major >= 18) {
     commands.push(
-      "npx --yes create-vite@5 . --template react-ts --no-interactive",
+      "npm exec --yes --package=create-vite@5 -- create-vite . --template react-ts --no-interactive",
     );
   }
 
